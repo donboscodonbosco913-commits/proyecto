@@ -539,3 +539,10 @@ def ver_equipo_detalle(request: Request, id_equipo: int, db: Session = Depends(g
         "equipo": equipo,
         "perifericos": perifericos
     })
+import os
+import uvicorn
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))  # Render define el puerto en la variable de entorno PORT
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+
