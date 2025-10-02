@@ -10,7 +10,7 @@ jinja2
 python-multipart
 pydantic
 python-dotenv
-
+itsdangerous
 python-multipart
 fastapi
 uvicorn
@@ -19,3 +19,4 @@ jinja2
 python-multipart
 pydantic
 python-dotenv
+
