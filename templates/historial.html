@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Equipos Eliminados</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <h2 class="mb-4">Historial de Equipos Eliminados</h2>
+
+        <a href="/admin" class="btn btn-secondary mb-4">← Regresar al panel</a>
+
+        <div class="card">
+            <div class="card-header bg-dark text-white">Listado de equipos eliminados</div>
+            <p class="ps-3">Total equipos eliminados: {{ historial | length }}</p>
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Código</th>
+                            <th>Edificio</th>
+                            <th>Tipo</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Serie</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in historial %}
+                        <tr>
+                            <td>{{ h.id_equipo }}</td>
+                            <td>{{ h.codigo }}</td>
+                            <td>{{ h.id_edificio }}</td>
+                            <td>{{ h.id_tipo }}</td>
+                            <td>{{ h.marca }}</td>
+                            <td>{{ h.modelo }}</td>
+                            <td>{{ h.serie }}</td>
+                            <td>{{ h.estado }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

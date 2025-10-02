@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Equipos - Usuario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .equipo-card {
+            transition: transform 0.2s;
+            border-left: 4px solid #0d6efd;
+        }
+        .equipo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .pc-details {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 3px solid #28a745;
+        }
+        .search-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .cpu-badge {
+            background-color: #28a745;
+        }
+        .other-badge {
+            background-color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-laptop-house"></i> Inventario Colegio
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user"></i> {{ request.session.usuario }}
+                </span>
+                <a class="btn btn-outline-light btn-sm" href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Panel de Búsqueda -->
+        <div class="search-box">
+            <h4><i class="fas fa-search"></i> Buscar Equipos</h4>
+            <form method="get" action="/usuario" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="filtro" class="form-control" placeholder="Código, marca, modelo..." 
+                           value="{{ filtro_actual }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="id_edificio" class="form-select">
+                        <option value="">Todos los edificios</option>
+                        {% for ed in edificios %}
+                        <option value="{{ ed.id_edificio }}" 
+                                {% if id_edificio_actual == ed.id_edificio %}selected{% endif %}>
+                            {{ ed.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="id_tipo" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        {% for tipo in tipos %}
+                        <option value="{{ tipo.id_tipo }}" 
+                                {% if id_tipo_actual == tipo.id_tipo %}selected{% endif %}>
+                            {{ tipo.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-light w-100">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Resultados -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>
+                <i class="fas fa-laptop"></i> Equipos Encontrados: 
+                <span class="badge bg-primary">{{ equipos|length }}</span>
+            </h5>
+            {% if filtro_actual or id_edificio_actual or id_tipo_actual %}
+            <a href="/usuario" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i> Limpiar filtros
+            </a>
+            {% endif %}
+        </div>
+
+        {% if equipos %}
+        <div class="row">
+            {% for equipo in equipos %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card equipo-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title text-primary">{{ equipo.codigo }}</h6>
+                            <div>
+                                <span class="badge bg-success">{{ equipo.estado }}</span>
+                                <span class="badge {% if equipo.tipo.nombre.lower() == 'cpu' %}cpu-badge{% else %}other-badge{% endif %}">
+                                    {{ equipo.tipo.nombre }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <p class="card-text mb-1">
+                            <i class="fas fa-building text-muted"></i> 
+                            <strong>Edificio:</strong> {{ equipo.edificio.nombre }}
+                        </p>
+                        <p class="card-text mb-1">
+                            <i class="fas fa-industry text-muted"></i> 
+                            <strong>Marca:</strong> {{ equipo.marca or 'N/A' }}
+                        </p>
+                        <p class="card-text mb-1">
+                            <i class="fas fa-cube text-muted"></i> 
+                            <strong>Modelo:</strong> {{ equipo.modelo or 'N/A' }}
+                        </p>
+                        <p class="card-text mb-3">
+                            <i class="fas fa-barcode text-muted"></i> 
+                            <strong>Serie:</strong> {{ equipo.serie or 'N/A' }}
+                        </p>
+
+                        <!-- SOLO MOSTRAR DETALLES TÉCNICOS PARA CPU -->
+                        {% if equipo.tipo.nombre.lower() == 'cpu' and equipo.detalle %}
+                        <div class="pc-details">
+                            <small class="text-muted"><strong><i class="fas fa-microchip"></i> Especificaciones Técnicas:</strong></small>
+                            <div class="mt-2">
+                                {% if equipo.detalle.procesador %}
+                                <div class="mb-1">
+                                    <i class="fas fa-microchip text-primary"></i>
+                                    <strong>Procesador:</strong> {{ equipo.detalle.procesador }}
+                                </div>
+                                {% endif %}
+                                
+                                {% if equipo.detalle.ram_gb %}
+                                <div class="mb-1">
+                                    <i class="fas fa-memory text-primary"></i>
+                                    <strong>RAM:</strong> {{ equipo.detalle.ram_gb }}GB 
+                                    {% if equipo.detalle.tipo_ram %}({{ equipo.detalle.tipo_ram }}){% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                {% if equipo.detalle.almacenamiento_gb %}
+                                <div class="mb-1">
+                                    <i class="fas fa-hdd text-primary"></i>
+                                    <strong>Almacenamiento:</strong> {{ equipo.detalle.almacenamiento_gb }}GB 
+                                    {% if equipo.detalle.tipo_almacenamiento %}({{ equipo.detalle.tipo_almacenamiento }}){% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Gráfica dedicada si existe -->
+                                {% if equipo.detalle.grafica %}
+                                <div class="mb-1">
+                                    <i class="fas fa-desktop text-primary"></i>
+                                    <strong>Gráfica:</strong> {{ equipo.detalle.grafica.marca }} {{ equipo.detalle.grafica.modelo }} 
+                                    ({{ equipo.detalle.grafica.vram_gb }}GB VRAM)
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>Registrado: {{ equipo.fecha_registro.strftime('%d/%m/%Y') }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No se encontraron equipos</h5>
+            <p class="text-muted">Intenta con otros criterios de búsqueda</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

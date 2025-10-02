@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Inventario Colegio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand i {
+            margin-right: 8px;
+        }
+        .usuario-card {
+            transition: transform 0.2s;
+            border-left: 4px solid #0d6efd;
+        }
+        .usuario-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .badge-rol {
+            font-size: 0.85em;
+            padding: 0.3em 0.5em;
+        }
+        .btn-back {
+            margin-bottom: 20px;
+        }
+        .form-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-laptop-house"></i> Inventario Colegio
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user"></i> {{ request.session.usuario }}
+                </span>
+                <a class="btn btn-outline-light btn-sm" href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Botón regresar -->
+        <a href="/admin" class="btn btn-secondary btn-back"><i class="fas fa-arrow-left"></i> Regresar al panel</a>
+        
+        <!-- Tabla de usuarios -->
+        <div class="usuario-card p-3 mb-4">
+            <h4 class="mb-3"><i class="fas fa-users"></i> Usuarios registrados</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Fecha de creación</th>
+                            <th>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                       {% for u in usuarios %}
+                        <tr>
+                            <td>{{ u.id_usuario }}</td>
+                            <td>{{ u.nombre }}</td>
+                            <td>{{ u.usuario }}</td>
+                            <td>
+                                <span class="badge bg-primary badge-rol">{{ u.rol }}</span>
+                            </td>
+                            <td>{{ u.fecha_creacion.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <form method="post" action="/usuarios/{{ u.id_usuario }}/eliminar" onsubmit="return confirm('¿Estás seguro de eliminar este usuario?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Formulario de registro -->
+        <div class="form-section">
+            <h4><i class="fas fa-user-plus"></i> Registrar nuevo usuario</h4>
+            <form method="post" action="/usuarios/nuevo" class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <input type="text" name="nombre" class="form-control" placeholder="Nombre completo" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="usuario" class="form-control" placeholder="Usuario" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="password" name="clave" class="form-control" placeholder="Contraseña" required>
+                </div>
+                <div class="col-md-2">
+                    <select name="rol" class="form-select" required>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Estandar">Estandar</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus-circle"></i> Crear usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
