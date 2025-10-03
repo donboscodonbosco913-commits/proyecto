@@ -79,9 +79,17 @@
                 <td colspan="10">
                     <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3">
                         <h6 class="mt-2">Detalles técnicos</h6>
-                        <div class="col-md-2"><input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" value="{{ e.ram_gb or '' }}"></div>
+                        <div class="col-md-2">
+                            <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" 
+                                   value="{{ e.ram_gb if e.ram_gb is not none else '' }}"
+                                   onchange="handleNumberInput(this)">
+                        </div>
                         <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control" placeholder="Tipo RAM" value="{{ e.tipo_ram or '' }}"></div>
-                        <div class="col-md-2"><input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)" value="{{ e.almacenamiento_gb or '' }}"></div>
+                        <div class="col-md-2">
+                            <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)" 
+                                   value="{{ e.almacenamiento_gb if e.almacenamiento_gb is not none else '' }}"
+                                   onchange="handleNumberInput(this)">
+                        </div>
                         <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control" placeholder="Tipo almacenamiento" value="{{ e.tipo_almacenamiento or '' }}"></div>
                         <div class="col-md-4"><input type="text" name="procesador" class="form-control" placeholder="Procesador" value="{{ e.procesador or '' }}"></div>
                         <div class="col-md-12"><textarea name="otros_detalles" class="form-control" placeholder="Otros detalles">{{ e.otros_detalles or '' }}</textarea></div>
@@ -90,7 +98,11 @@
                         <h6>Gráfica dedicada</h6>
                         <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control" placeholder="Marca de gráfica" value="{{ e.grafica_marca or '' }}"></div>
                         <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control" placeholder="Modelo de gráfica" value="{{ e.grafica_modelo or '' }}"></div>
-                        <div class="col-md-2"><input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)" value="{{ e.vram_gb or '' }}"></div>
+                        <div class="col-md-2">
+                            <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)" 
+                                   value="{{ e.vram_gb if e.vram_gb is not none else '' }}"
+                                   onchange="handleNumberInput(this)">
+                        </div>
 
                         <hr class="mt-4 mb-2">
                         <h6>Periféricos asociados</h6>
@@ -126,7 +138,7 @@
     </table>
 
     <h4 class="mt-5">Registrar nuevo equipo</h4>
-    <form method="post" action="/equipos/nuevo" class="row g-3 mb-4">
+    <form method="post" action="/equipos/nuevo" class="row g-3 mb-4" id="nuevoEquipoForm">
         <div class="col-md-3"><input type="text" name="codigo" class="form-control" placeholder="Código del equipo" required></div>
         <div class="col-md-3">
             <select name="id_edificio" class="form-select" required>
@@ -158,9 +170,15 @@
         <!-- Campos técnicos CPU -->
         <div id="camposCPU" class="row g-3 mt-2" style="display: none; flex-wrap: wrap;">
             <h6>Detalles técnicos</h6>
-            <div class="col-md-2"><input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)"></div>
+            <div class="col-md-2">
+                <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" 
+                       onchange="handleNumberInput(this)">
+            </div>
             <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control" placeholder="Tipo RAM"></div>
-            <div class="col-md-2"><input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)"></div>
+            <div class="col-md-2">
+                <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)" 
+                       onchange="handleNumberInput(this)">
+            </div>
             <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control" placeholder="Tipo almacenamiento"></div>
             <div class="col-md-4"><input type="text" name="procesador" class="form-control" placeholder="Procesador"></div>
             <div class="col-md-12"><textarea name="otros_detalles" class="form-control" placeholder="Otros detalles técnicos"></textarea></div>
@@ -169,7 +187,10 @@
             <h6>Gráfica dedicada</h6>
             <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control" placeholder="Marca de gráfica"></div>
             <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control" placeholder="Modelo de gráfica"></div>
-            <div class="col-md-2"><input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)"></div>
+            <div class="col-md-2">
+                <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)" 
+                       onchange="handleNumberInput(this)">
+            </div>
 
             <hr>
             <h6>Periféricos asociados</h6>
@@ -229,6 +250,39 @@ function agregarPeriferico(id_equipo) {
     container.appendChild(div);
     contadorPerifericos[id_equipo]++;
 }
+
+// Función para manejar campos numéricos vacíos
+function handleNumberInput(input) {
+    if (input.value === '') {
+        // Si el campo está vacío, lo limpiamos completamente
+        input.value = '';
+    }
+}
+
+// Limpiar campos numéricos antes del envío del formulario
+document.getElementById('nuevoEquipoForm')?.addEventListener('submit', function(e) {
+    const numberInputs = this.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        if (input.value === '') {
+            // Remover el atributo name temporalmente para que no se envíe
+            input.setAttribute('data-original-name', input.name);
+            input.removeAttribute('name');
+        }
+    });
+});
+
+// Para formularios de actualización
+document.querySelectorAll('form[action*="/detalles/actualizar"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const numberInputs = this.querySelectorAll('input[type="number"]');
+        numberInputs.forEach(input => {
+            if (input.value === '') {
+                input.setAttribute('data-original-name', input.name);
+                input.removeAttribute('name');
+            }
+        });
+    });
+});
 </script>
 </body>
 </html>
