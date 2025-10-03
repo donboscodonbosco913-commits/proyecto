@@ -28,112 +28,6 @@
         toast.show();
     </script>
     {% endif %}
-
-    <h3>Listado de equipos</h3>
-    {% if request.query_params.get("eliminado") %}
-    <div class="alert alert-success">✅ Equipo eliminado correctamente.</div>
-    {% elif request.query_params.get("error") == "notfound" %}
-    <div class="alert alert-danger">❌ El equipo no fue encontrado.</div>
-    {% endif %}
-    <p>Total equipos: {{ equipos|length }}</p>
-
-    <table class="table table-bordered table-striped mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Código</th>
-                <th>Edificio</th>
-                <th>Tipo</th>
-                <th>Marca</th>
-                <th>Modelo</th>
-                <th>Serie</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for e in equipos %}
-            <tr>
-                <td>{{ e.id_equipo }}</td>
-                <td>{{ e.codigo }}</td>
-                <td>{{ e.edificio_nombre }}</td>
-                <td>{{ e.tipo_nombre }}</td>
-                <td>{{ e.marca }}</td>
-                <td>{{ e.modelo }}</td>
-                <td>{{ e.serie }}</td>
-                <td>{{ e.estado }}</td>
-                <td>{{ e.fecha_registro.strftime('%Y-%m-%d') if e.fecha_registro else '' }}</td>
-                <td class="d-flex gap-2">
-                    {% if e.tipo_nombre.lower() == "cpu" %}
-                    <button class="btn btn-info btn-sm" onclick="toggleDetalles({{ e.id_equipo }})">Ver detalles</button>
-                    {% endif %}
-                    <form method="post" action="/equipos/{{ e.id_equipo }}/eliminar" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este equipo?')">
-                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                    </form>
-                </td>
-            </tr>
-
-            {% if e.tipo_nombre.lower() == "cpu" %}
-            <tr id="detalles-{{ e.id_equipo }}" style="display: none;">
-                <td colspan="10">
-                    <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3" onsubmit="return prepararFormularioActualizacion(this)">
-                        <h6 class="mt-2">Detalles técnicos</h6>
-                        <div class="col-md-2">
-                            <input type="number" name="ram_gb" class="form-control cpu-field" placeholder="RAM (GB)" 
-                                   value="{{ e.ram_gb if e.ram_gb is not none }}">
-                        </div>
-                        <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control cpu-field" placeholder="Tipo RAM" value="{{ e.tipo_ram or '' }}"></div>
-                        <div class="col-md-2">
-                            <input type="number" name="almacenamiento_gb" class="form-control cpu-field" placeholder="Almacenamiento (GB)" 
-                                   value="{{ e.almacenamiento_gb if e.almacenamiento_gb is not none }}">
-                        </div>
-                        <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control cpu-field" placeholder="Tipo almacenamiento" value="{{ e.tipo_almacenamiento or '' }}"></div>
-                        <div class="col-md-4"><input type="text" name="procesador" class="form-control cpu-field" placeholder="Procesador" value="{{ e.procesador or '' }}"></div>
-                        <div class="col-md-12"><textarea name="otros_detalles" class="form-control cpu-field" placeholder="Otros detalles">{{ e.otros_detalles or '' }}</textarea></div>
-
-                        <hr class="mt-4 mb-2">
-                        <h6>Gráfica dedicada</h6>
-                        <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control cpu-field" placeholder="Marca de gráfica" value="{{ e.grafica_marca or '' }}"></div>
-                        <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control cpu-field" placeholder="Modelo de gráfica" value="{{ e.grafica_modelo or '' }}"></div>
-                        <div class="col-md-2">
-                            <input type="number" name="vram_gb" class="form-control cpu-field" placeholder="VRAM (GB)" 
-                                   value="{{ e.vram_gb if e.vram_gb is not none }}">
-                        </div>
-
-                        <hr class="mt-4 mb-2">
-                        <h6>Periféricos asociados</h6>
-                        <div id="perifericosContainer-{{ e.id_equipo }}" class="row g-3">
-                            {% for p in e.perifericos %}
-                            <div class="row g-3 mt-2">
-                                <div class="col-md-3">
-                                    <select name="perifericos[{{ loop.index0 }}][tipo]" class="form-select cpu-field" required>
-                                        <option value="Monitor" {% if p.tipo=="Monitor" %}selected{% endif %}>Monitor</option>
-                                        <option value="Teclado" {% if p.tipo=="Teclado" %}selected{% endif %}>Teclado</option>
-                                        <option value="Mouse" {% if p.tipo=="Mouse" %}selected{% endif %}>Mouse</option>
-                                        <option value="Bocina" {% if p.tipo=="Bocina" %}selected{% endif %}>Bocina</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][marca]" class="form-control cpu-field" value="{{ p.marca }}"></div>
-                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][modelo]" class="form-control cpu-field" value="{{ p.modelo }}"></div>
-                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][serie]" class="form-control cpu-field" value="{{ p.serie }}"></div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="col-12 text-end mt-3">
-                            <button type="submit" class="btn btn-primary btn-sm">Guardar cambios</button>
-                        </div>
-                    </form>
-                </td>
-            </tr>
-            <script>
-                contadorPerifericos[{{ e.id_equipo }}] = {{ e.perifericos|length }};
-            </script>
-            {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
-
     <h4 class="mt-5">Registrar nuevo equipo</h4>
     <form method="post" action="/equipos/nuevo" class="row g-3 mb-4" id="nuevoEquipoForm" onsubmit="return prepararFormularioNuevo()">
         <div class="col-md-3"><input type="text" name="codigo" class="form-control" placeholder="Código del equipo" required></div>
@@ -200,6 +94,113 @@
             <button type="submit" class="btn btn-success">Registrar equipo</button>
         </div>
     </form>
+    
+    <h3>Listado de equipos</h3>
+    {% if request.query_params.get("eliminado") %}
+    <div class="alert alert-success">✅ Equipo eliminado correctamente.</div>
+    {% elif request.query_params.get("error") == "notfound" %}
+    <div class="alert alert-danger">❌ El equipo no fue encontrado.</div>
+    {% endif %}
+    <p>Total equipos: {{ equipos|length }}</p>
+
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Código</th>
+                <th>Edificio</th>
+                <th>Tipo</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Serie</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in equipos %}
+            <tr>
+                <td>{{ e.id_equipo }}</td>
+                <td>{{ e.codigo }}</td>
+                <td>{{ e.edificio_nombre }}</td>
+                <td>{{ e.tipo_nombre }}</td>
+                <td>{{ e.marca }}</td>
+                <td>{{ e.modelo }}</td>
+                <td>{{ e.serie }}</td>
+                <td>{{ e.estado }}</td>
+                <td>{{ e.fecha_registro.strftime('%Y-%m-%d') if e.fecha_registro else '' }}</td>
+                <td class="d-flex gap-2">
+                    {% if e.tipo_nombre.lower() == "cpu" %}
+                    <button class="btn btn-info btn-sm" onclick="toggleDetalles({{ e.id_equipo }})">Ver detalles</button>
+                    {% endif %}
+                    <form method="post" action="/equipos/{{ e.id_equipo }}/eliminar" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este equipo?')">
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+
+            {% if e.tipo_nombre.lower() == "cpu" %}
+            <tr id="detalles-{{ e.id_equipo }}" style="display: none;">
+                <td colspan="10">
+                    <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3" onsubmit="return prepararFormularioActualizacion(this)">
+                        <h6 class="mt-2">Detalles técnicos</h6>
+                        <div class="col-md-2">
+                            <input type="number" name="ram_gb" class="form-control cpu-field" placeholder="RAM (GB)" 
+                                   value="{{ e.ram_gb or '' }}">
+                        </div>
+                        <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control cpu-field" placeholder="Tipo RAM" value="{{ e.tipo_ram or '' }}"></div>
+                        <div class="col-md-2">
+                            <input type="number" name="almacenamiento_gb" class="form-control cpu-field" placeholder="Almacenamiento (GB)" 
+                                   value="{{ e.almacenamiento_gb or '' }}">
+                        </div>
+                        <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control cpu-field" placeholder="Tipo almacenamiento" value="{{ e.tipo_almacenamiento or '' }}"></div>
+                        <div class="col-md-4"><input type="text" name="procesador" class="form-control cpu-field" placeholder="Procesador" value="{{ e.procesador or '' }}"></div>
+                        <div class="col-md-12"><textarea name="otros_detalles" class="form-control cpu-field" placeholder="Otros detalles">{{ e.otros_detalles or '' }}</textarea></div>
+
+                        <hr class="mt-4 mb-2">
+                        <h6>Gráfica dedicada</h6>
+                        <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control cpu-field" placeholder="Marca de gráfica" value="{{ e.grafica_marca or '' }}"></div>
+                        <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control cpu-field" placeholder="Modelo de gráfica" value="{{ e.grafica_modelo or '' }}"></div>
+                        <div class="col-md-2">
+                            <input type="number" name="vram_gb" class="form-control cpu-field" placeholder="VRAM (GB)" 
+                                   value="{{ e.vram_gb or '' }}">
+                        </div>
+
+                        <hr class="mt-4 mb-2">
+                        <h6>Periféricos asociados</h6>
+                        <div id="perifericosContainer-{{ e.id_equipo }}" class="row g-3">
+                            {% for p in e.perifericos %}
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-3">
+                                    <select name="perifericos[{{ loop.index0 }}][tipo]" class="form-select cpu-field" required>
+                                        <option value="Monitor" {% if p.tipo=="Monitor" %}selected{% endif %}>Monitor</option>
+                                        <option value="Teclado" {% if p.tipo=="Teclado" %}selected{% endif %}>Teclado</option>
+                                        <option value="Mouse" {% if p.tipo=="Mouse" %}selected{% endif %}>Mouse</option>
+                                        <option value="Bocina" {% if p.tipo=="Bocina" %}selected{% endif %}>Bocina</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][marca]" class="form-control cpu-field" value="{{ p.marca }}"></div>
+                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][modelo]" class="form-control cpu-field" value="{{ p.modelo }}"></div>
+                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][serie]" class="form-control cpu-field" value="{{ p.serie }}"></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-12 text-end mt-3">
+                            <button type="submit" class="btn btn-primary btn-sm">Guardar cambios</button>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+            <script>
+                contadorPerifericos[{{ e.id_equipo }}] = {{ e.perifericos|length }};
+            </script>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    
 </div>
 
 <script>
@@ -245,14 +246,12 @@ function agregarPeriferico(id_equipo) {
     contadorPerifericos[id_equipo]++;
 }
 
-// Función para preparar el formulario de NUEVO equipo
 function prepararFormularioNuevo() {
     const formulario = document.getElementById('nuevoEquipoForm');
     const tipoSelect = document.getElementById('tipoEquipo');
     const esCPU = tipoSelect.options[tipoSelect.selectedIndex].text.toLowerCase() === 'cpu';
     
     if (!esCPU) {
-        // Si NO es CPU, remover completamente TODOS los campos con clase cpu-field
         const camposCPU = formulario.querySelectorAll('.cpu-field');
         camposCPU.forEach(campo => {
             campo.remove();
@@ -262,13 +261,10 @@ function prepararFormularioNuevo() {
     return true;
 }
 
-// Función para preparar el formulario de ACTUALIZACIÓN
 function prepararFormularioActualizacion(form) {
-    // Para actualización, siempre es CPU, pero limpiamos campos numéricos vacíos
     const numberInputs = form.querySelectorAll('input[type="number"]');
     numberInputs.forEach(input => {
         if (input.value === '' || input.value === null) {
-            // Asignar 0 temporalmente para evitar error de parsing
             input.value = '0';
         }
     });
