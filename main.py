@@ -215,109 +215,6 @@ def crear_edificio(
     return RedirectResponse("/edificios", status_code=302)
 
 # ...existing code...
-# ------------------ ACTUALIZAR DETALLES PC ------------------
-@app.post("/equipos/{id_equipo}/detalles/actualizar")
-async def actualizar_detalles_pc(
-    request: Request,
-    id_equipo: int = Path(...),
-    ram_gb: Optional[str] = Form(None),
-    tipo_ram: Optional[str] = Form(None),
-    almacenamiento_gb: Optional[str] = Form(None),
-    tipo_almacenamiento: Optional[str] = Form(None),
-    procesador: Optional[str] = Form(None),
-    otros_detalles: Optional[str] = Form(None),
-    grafica_marca: Optional[str] = Form(None),
-    grafica_modelo: Optional[str] = Form(None),
-    vram_gb: Optional[str] = Form(None),
-    es_cpu: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
-):
-    if request.session.get("rol") != "Administrador":
-        return RedirectResponse("/", status_code=302)
-
-    equipo = db.query(Equipo).filter(Equipo.id_equipo == id_equipo).first()
-    if not equipo:
-        request.session["error"] = "Equipo no encontrado"
-        return RedirectResponse("/equipos", status_code=302)
-
-    try:
-        # Función helper para convertir strings vacíos a None
-        def safe_int(value: Optional[str]) -> Optional[int]:
-            if value is None or value.strip() == "":
-                return None
-            try:
-                return int(value)
-            except ValueError:
-                return None
-
-        # Convertir campos numéricos
-        ram_gb_int = safe_int(ram_gb)
-        almacenamiento_gb_int = safe_int(almacenamiento_gb)
-        vram_gb_int = safe_int(vram_gb)
-
-        # Obtener datos del formulario
-        form_data = await request.form()
-        
-        detalle_pc = db.query(PcDetalle).filter(PcDetalle.id_equipo == id_equipo).first()
-        if not detalle_pc:
-            detalle_pc = PcDetalle(id_equipo=id_equipo)
-            db.add(detalle_pc)
-
-        # Actualizar detalles principales
-        detalle_pc.ram_gb = ram_gb_int
-        detalle_pc.tipo_ram = tipo_ram
-        detalle_pc.almacenamiento_gb = almacenamiento_gb_int
-        detalle_pc.tipo_almacenamiento = tipo_almacenamiento
-        detalle_pc.procesador = procesador
-        detalle_pc.otros_detalles = otros_detalles
-
-        # Actualizar gráfica
-        grafica = db.query(GraficaDedicada).filter(GraficaDedicada.id_pc == detalle_pc.id_pc).first()
-        if not grafica and (grafica_marca or grafica_modelo or vram_gb_int):
-            grafica = GraficaDedicada(id_pc=detalle_pc.id_pc)
-            db.add(grafica)
-        
-        if grafica:
-            grafica.marca = grafica_marca
-            grafica.modelo = grafica_modelo
-            grafica.vram_gb = vram_gb_int
-
-        # Eliminar periféricos antiguos y agregar nuevos
-        db.query(Periferico).filter(Periferico.id_equipo == id_equipo).delete()
-
-        # Procesar periféricos del formulario
-        perifericos_data = {}
-        import re
-        for key, value in form_data.items():
-            if key.startswith("perifericos["):
-                match = re.match(r"perifericos\[(\d+)\]\[(\w+)\]", key)
-                if match:
-                    idx, field = match.groups()
-                    if idx not in perifericos_data:
-                        perifericos_data[idx] = {}
-                    perifericos_data[idx][field] = value
-
-        for idx, p_data in perifericos_data.items():
-            if p_data.get("tipo"):
-                nuevo_periferico = Periferico(
-                    id_equipo=id_equipo,
-                    tipo=p_data.get("tipo"),
-                    marca=p_data.get("marca", ""),
-                    modelo=p_data.get("modelo", ""),
-                    serie=p_data.get("serie", "")
-                )
-                db.add(nuevo_periferico)
-
-        db.commit()
-        request.session["mensaje"] = "✅ Detalles actualizados correctamente"
-        
-    except Exception as e:
-        db.rollback()
-        request.session["error"] = f"❌ Error al actualizar: {str(e)}"
-
-    return RedirectResponse("/equipos", status_code=302)
-
-
 # ------------------ ELIMINAR EQUIPO ------------------
 # ...existing code...
 
@@ -366,124 +263,6 @@ def eliminar_equipo(request: Request, id_equipo: int = Path(...), db: Session = 
 # ...existing code...
 
 #-------------------NUEVO EQUIPO-----------------------
-@app.post("/equipos/nuevo")
-async def crear_equipo(
-    request: Request,
-    codigo: str = Form(...),
-    id_edificio: int = Form(...),
-    id_tipo: int = Form(...),
-    marca: str = Form(...),
-    modelo: str = Form(...),
-    serie: str = Form(...),
-    estado: str = Form(...),
-    # Cambiar a Optional[str] y convertir manualmente
-    ram_gb: Optional[str] = Form(None),
-    tipo_ram: Optional[str] = Form(None),
-    almacenamiento_gb: Optional[str] = Form(None),
-    tipo_almacenamiento: Optional[str] = Form(None),
-    procesador: Optional[str] = Form(None),
-    otros_detalles: Optional[str] = Form(None),
-    grafica_marca: Optional[str] = Form(None),
-    grafica_modelo: Optional[str] = Form(None),
-    vram_gb: Optional[str] = Form(None),
-    es_cpu: Optional[str] = Form(None),  # Nuevo campo para identificar si es CPU
-    db: Session = Depends(get_db)
-):
-    if request.session.get("rol") != "Administrador":
-        return RedirectResponse("/", status_code=302)
-
-    form_data = await request.form()
-
-    try:
-        # Función helper para convertir strings vacíos a None
-        def safe_int(value: Optional[str]) -> Optional[int]:
-            if value is None or value.strip() == "":
-                return None
-            try:
-                return int(value)
-            except ValueError:
-                return None
-
-        # Convertir los campos numéricos solo si es CPU
-        ram_gb_int = safe_int(ram_gb) if es_cpu else None
-        almacenamiento_gb_int = safe_int(almacenamiento_gb) if es_cpu else None
-        vram_gb_int = safe_int(vram_gb) if es_cpu else None
-
-        # Crear el equipo básico
-        nuevo_equipo = Equipo(
-            codigo=codigo,
-            id_edificio=id_edificio,
-            id_tipo=id_tipo,
-            marca=marca,
-            modelo=modelo,
-            serie=serie,
-            estado=estado,
-            fecha_registro=datetime.now()
-        )
-        db.add(nuevo_equipo)
-        db.commit()
-        db.refresh(nuevo_equipo)
-
-        # Solo crear detalles si es CPU y tiene campos técnicos
-        tipo_obj = db.query(TipoDispositivo).filter(TipoDispositivo.id_tipo == id_tipo).first()
-        if tipo_obj and tipo_obj.nombre.lower() == "cpu" and es_cpu:
-            # Detalles de PC
-            detalle_pc = PcDetalle(
-                id_equipo=nuevo_equipo.id_equipo,
-                ram_gb=ram_gb_int,
-                tipo_ram=tipo_ram,
-                almacenamiento_gb=almacenamiento_gb_int,
-                tipo_almacenamiento=tipo_almacenamiento,
-                procesador=procesador,
-                otros_detalles=otros_detalles
-            )
-            db.add(detalle_pc)
-            db.commit()
-            db.refresh(detalle_pc)
-
-            # Gráfica dedicada (solo si hay datos)
-            if grafica_marca or grafica_modelo or vram_gb_int:
-                grafica = GraficaDedicada(
-                    id_pc=detalle_pc.id_pc,
-                    marca=grafica_marca,
-                    modelo=grafica_modelo,
-                    vram_gb=vram_gb_int
-                )
-                db.add(grafica)
-                db.commit()
-
-            # Periféricos
-            perifericos_data = {}
-            import re
-            for key, value in form_data.items():
-                if key.startswith("perifericos["):
-                    match = re.match(r"perifericos\[(\d+)\]\[(\w+)\]", key)
-                    if match:
-                        idx, field = match.groups()
-                        if idx not in perifericos_data:
-                            perifericos_data[idx] = {}
-                        perifericos_data[idx][field] = value
-
-            for idx, p_data in perifericos_data.items():
-                if p_data.get("tipo"):  # solo si tiene tipo
-                    nuevo_periferico = Periferico(
-                        id_equipo=nuevo_equipo.id_equipo,
-                        tipo=p_data.get("tipo"),
-                        marca=p_data.get("marca", ""),
-                        modelo=p_data.get("modelo", ""),
-                        serie=p_data.get("serie", "")
-                    )
-                    db.add(nuevo_periferico)
-            db.commit()
-
-        request.session["mensaje"] = f"✅ Equipo {codigo} creado correctamente."
-
-    except Exception as e:
-        db.rollback()
-        request.session["error"] = f"❌ Error al crear equipo: {str(e)}"
-
-    return RedirectResponse("/equipos", status_code=302)
-
 
 # ------------------ HISTORIAL ------------------
 @app.get("/historial", response_class=HTMLResponse)
@@ -599,3 +378,194 @@ def ver_equipo_detalle(request: Request, id_equipo: int, db: Session = Depends(g
 
 
 
+@app.post("/equipos/nuevo")
+async def crear_equipo(
+    request: Request,
+    codigo: str = Form(...),
+    id_edificio: int = Form(...),
+    id_tipo: int = Form(...),
+    marca: str = Form(...),
+    modelo: str = Form(...),
+    serie: str = Form(...),
+    estado: str = Form(...),
+    # Cambiar todos los campos numéricos a str
+    ram_gb: str = Form(""),
+    tipo_ram: str = Form(""),
+    almacenamiento_gb: str = Form(""),
+    tipo_almacenamiento: str = Form(""),
+    procesador: str = Form(""),
+    otros_detalles: str = Form(""),
+    grafica_marca: str = Form(""),
+    grafica_modelo: str = Form(""),
+    vram_gb: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    if request.session.get("rol") != "Administrador":
+        return RedirectResponse("/", status_code=302)
+
+    try:
+        # Función helper para convertir strings
+        def parse_int(value: str) -> Optional[int]:
+            if not value or value.strip() == "":
+                return None
+            try:
+                return int(value)
+            except ValueError:
+                return None
+
+        # Convertir campos
+        ram_gb_int = parse_int(ram_gb)
+        almacenamiento_gb_int = parse_int(almacenamiento_gb)
+        vram_gb_int = parse_int(vram_gb)
+
+        # Crear equipo básico
+        nuevo_equipo = Equipo(
+            codigo=codigo,
+            id_edificio=id_edificio,
+            id_tipo=id_tipo,
+            marca=marca,
+            modelo=modelo,
+            serie=serie,
+            estado=estado,
+            fecha_registro=datetime.now()
+        )
+        db.add(nuevo_equipo)
+        db.commit()
+        db.refresh(nuevo_equipo)
+
+        # Verificar si es CPU
+        tipo_obj = db.query(TipoDispositivo).filter(TipoDispositivo.id_tipo == id_tipo).first()
+        if tipo_obj and tipo_obj.nombre.lower() == "cpu":
+            # Detalles de PC
+            detalle_pc = PcDetalle(
+                id_equipo=nuevo_equipo.id_equipo,
+                ram_gb=ram_gb_int,
+                tipo_ram=tipo_ram if tipo_ram.strip() else None,
+                almacenamiento_gb=almacenamiento_gb_int,
+                tipo_almacenamiento=tipo_almacenamiento if tipo_almacenamiento.strip() else None,
+                procesador=procesador if procesador.strip() else None,
+                otros_detalles=otros_detalles if otros_detalles.strip() else None
+            )
+            db.add(detalle_pc)
+            db.commit()
+            db.refresh(detalle_pc)
+
+            # Gráfica dedicada
+            if grafica_marca.strip() or grafica_modelo.strip() or vram_gb_int:
+                grafica = GraficaDedicada(
+                    id_pc=detalle_pc.id_pc,
+                    marca=grafica_marca if grafica_marca.strip() else None,
+                    modelo=grafica_modelo if grafica_modelo.strip() else None,
+                    vram_gb=vram_gb_int
+                )
+                db.add(grafica)
+                db.commit()
+
+        request.session["mensaje"] = f"✅ Equipo {codigo} creado correctamente."
+
+    except Exception as e:
+        db.rollback()
+        request.session["error"] = f"❌ Error al crear equipo: {str(e)}"
+
+    return RedirectResponse("/equipos", status_code=302)
+
+@app.post("/equipos/{id_equipo}/detalles/actualizar")
+async def actualizar_detalles_pc(
+    request: Request,
+    id_equipo: int = Path(...),
+    ram_gb: str = Form(""),
+    tipo_ram: str = Form(""),
+    almacenamiento_gb: str = Form(""),
+    tipo_almacenamiento: str = Form(""),
+    procesador: str = Form(""),
+    otros_detalles: str = Form(""),
+    grafica_marca: str = Form(""),
+    grafica_modelo: str = Form(""),
+    vram_gb: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    if request.session.get("rol") != "Administrador":
+        return RedirectResponse("/", status_code=302)
+
+    equipo = db.query(Equipo).filter(Equipo.id_equipo == id_equipo).first()
+    if not equipo:
+        request.session["error"] = "Equipo no encontrado"
+        return RedirectResponse("/equipos", status_code=302)
+
+    try:
+        # Función helper para convertir strings
+        def parse_int(value: str) -> Optional[int]:
+            if not value or value.strip() == "":
+                return None
+            try:
+                return int(value)
+            except ValueError:
+                return None
+
+        # Convertir campos
+        ram_gb_int = parse_int(ram_gb)
+        almacenamiento_gb_int = parse_int(almacenamiento_gb)
+        vram_gb_int = parse_int(vram_gb)
+
+        # Obtener o crear detalles de PC
+        detalle_pc = db.query(PcDetalle).filter(PcDetalle.id_equipo == id_equipo).first()
+        if not detalle_pc:
+            detalle_pc = PcDetalle(id_equipo=id_equipo)
+            db.add(detalle_pc)
+
+        # Actualizar detalles
+        detalle_pc.ram_gb = ram_gb_int
+        detalle_pc.tipo_ram = tipo_ram if tipo_ram.strip() else None
+        detalle_pc.almacenamiento_gb = almacenamiento_gb_int
+        detalle_pc.tipo_almacenamiento = tipo_almacenamiento if tipo_almacenamiento.strip() else None
+        detalle_pc.procesador = procesador if procesador.strip() else None
+        detalle_pc.otros_detalles = otros_detalles if otros_detalles.strip() else None
+
+        # Manejar gráfica
+        grafica = db.query(GraficaDedicada).filter(GraficaDedicada.id_pc == detalle_pc.id_pc).first()
+        
+        if grafica_marca.strip() or grafica_modelo.strip() or vram_gb_int:
+            if not grafica:
+                grafica = GraficaDedicada(id_pc=detalle_pc.id_pc)
+                db.add(grafica)
+            grafica.marca = grafica_marca if grafica_marca.strip() else None
+            grafica.modelo = grafica_modelo if grafica_modelo.strip() else None
+            grafica.vram_gb = vram_gb_int
+        elif grafica:
+            # Eliminar gráfica si no hay datos
+            db.delete(grafica)
+
+        # Procesar periféricos
+        form_data = await request.form()
+        db.query(Periferico).filter(Periferico.id_equipo == id_equipo).delete()
+
+        perifericos_data = {}
+        import re
+        for key, value in form_data.items():
+            if key.startswith("perifericos["):
+                match = re.match(r"perifericos\[(\d+)\]\[(\w+)\]", key)
+                if match:
+                    idx, field = match.groups()
+                    if idx not in perifericos_data:
+                        perifericos_data[idx] = {}
+                    perifericos_data[idx][field] = value
+
+        for idx, p_data in perifericos_data.items():
+            if p_data.get("tipo", "").strip():
+                nuevo_periferico = Periferico(
+                    id_equipo=id_equipo,
+                    tipo=p_data.get("tipo"),
+                    marca=p_data.get("marca", "").strip() or None,
+                    modelo=p_data.get("modelo", "").strip() or None,
+                    serie=p_data.get("serie", "").strip() or None
+                )
+                db.add(nuevo_periferico)
+
+        db.commit()
+        request.session["mensaje"] = "✅ Detalles actualizados correctamente"
+        
+    except Exception as e:
+        db.rollback()
+        request.session["error"] = f"❌ Error al actualizar: {str(e)}"
+
+    return RedirectResponse("/equipos", status_code=302)
