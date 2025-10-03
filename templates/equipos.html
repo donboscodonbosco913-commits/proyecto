@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -77,8 +77,7 @@
             {% if e.tipo_nombre.lower() == "cpu" %}
             <tr id="detalles-{{ e.id_equipo }}" style="display: none;">
                 <td colspan="10">
-                    <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3" onsubmit="return prepararEnvioFormulario(this)">
-                        <input type="hidden" name="es_cpu" value="true">
+                    <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3" onsubmit="return prepararFormularioActualizacion(this)">
                         <h6 class="mt-2">Detalles técnicos</h6>
                         <div class="col-md-2">
                             <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" 
@@ -136,7 +135,7 @@
     </table>
 
     <h4 class="mt-5">Registrar nuevo equipo</h4>
-    <form method="post" action="/equipos/nuevo" class="row g-3 mb-4" id="nuevoEquipoForm" onsubmit="return prepararEnvioFormulario(this)">
+    <form method="post" action="/equipos/nuevo" class="row g-3 mb-4" id="nuevoEquipoForm" onsubmit="return prepararFormularioNuevo()">
         <div class="col-md-3"><input type="text" name="codigo" class="form-control" placeholder="Código del equipo" required></div>
         <div class="col-md-3">
             <select name="id_edificio" class="form-select" required>
@@ -165,9 +164,8 @@
             </select>
         </div>
 
-        <!-- Campos técnicos CPU -->
+        <!-- Campos técnicos CPU - Solo se muestran cuando es CPU -->
         <div id="camposCPU" class="row g-3 mt-2" style="display: none; flex-wrap: wrap;">
-            <input type="hidden" name="es_cpu" value="true">
             <h6>Detalles técnicos</h6>
             <div class="col-md-2">
                 <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)">
@@ -210,14 +208,6 @@ function mostrarDetallesCPU() {
     const camposCPU = document.getElementById("camposCPU");
     const tipoSeleccionado = selectTipo.options[selectTipo.selectedIndex].text.toLowerCase();
     camposCPU.style.display = tipoSeleccionado === "cpu" ? "flex" : "none";
-    
-    // Si no es CPU, remover el campo hidden es_cpu
-    if (tipoSeleccionado !== "cpu") {
-        const hiddenInput = camposCPU.querySelector('input[name="es_cpu"]');
-        if (hiddenInput) {
-            hiddenInput.remove();
-        }
-    }
 }
 
 function toggleDetalles(id) {
@@ -255,35 +245,46 @@ function agregarPeriferico(id_equipo) {
     contadorPerifericos[id_equipo]++;
 }
 
-// Función para preparar el envío del formulario
-function prepararEnvioFormulario(form) {
-    const esCPU = form.querySelector('input[name="es_cpu"]') !== null;
+// Función para preparar el formulario de NUEVO equipo
+function prepararFormularioNuevo() {
+    const formulario = document.getElementById('nuevoEquipoForm');
+    const tipoSelect = document.getElementById('tipoEquipo');
+    const esCPU = tipoSelect.options[tipoSelect.selectedIndex].text.toLowerCase() === 'cpu';
     
     if (!esCPU) {
-        // Si no es CPU, remover todos los campos técnicos
-        const camposTecnicos = form.querySelectorAll(`
-            input[name="ram_gb"],
-            input[name="tipo_ram"], 
-            input[name="almacenamiento_gb"],
-            input[name="tipo_almacenamiento"],
-            input[name="procesador"],
-            textarea[name="otros_detalles"],
-            input[name="grafica_marca"],
-            input[name="grafica_modelo"],
-            input[name="vram_gb"]
-        `);
+        // Si NO es CPU, remover completamente los campos técnicos
+        const camposTecnicos = [
+            'ram_gb', 'tipo_ram', 'almacenamiento_gb', 'tipo_almacenamiento',
+            'procesador', 'otros_detalles', 'grafica_marca', 'grafica_modelo', 'vram_gb'
+        ];
         
-        camposTecnicos.forEach(campo => {
-            campo.removeAttribute('name');
+        camposTecnicos.forEach(nombre => {
+            const campo = formulario.querySelector(`[name="${nombre}"]`);
+            if (campo) {
+                campo.remove();
+            }
         });
         
-        // También remover periféricos si no es CPU
-        const perifericos = form.querySelectorAll('select[name^="perifericos"], input[name^="perifericos"]');
+        // Remover periféricos si no es CPU
+        const perifericos = formulario.querySelectorAll('[name^="perifericos"]');
         perifericos.forEach(periferico => {
-            periferico.removeAttribute('name');
+            periferico.remove();
         });
     }
     
+    return true; // Permitir el envío del formulario
+}
+
+// Función para preparar el formulario de ACTUALIZACIÓN (siempre es CPU aquí)
+function prepararFormularioActualizacion(form) {
+    // Para actualización, siempre es CPU, pero limpiamos campos vacíos
+    const numberInputs = form.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        if (input.value === '') {
+            // Para campos vacíos, los convertimos a 0 o los manejamos en el backend
+            input.value = '0';
+        }
+    });
     return true;
 }
 </script>
