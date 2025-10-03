@@ -381,6 +381,20 @@ def ver_equipo_detalle(request: Request, id_equipo: int, db: Session = Depends(g
 
 
 
+from typing import Optional
+from fastapi import FastAPI, Request, Form, Depends, Path
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+from datetime import datetime
+import re
+
+from database import get_db
+from models import Equipo, TipoDispositivo, PcDetalle, GraficaDedicada, Periferico
+
+app = FastAPI()
+
+
+# ---------- CREAR EQUIPO ----------
 @app.post("/equipos/nuevo")
 async def crear_equipo(
     request: Request,
@@ -391,17 +405,16 @@ async def crear_equipo(
     modelo: str = Form(...),
     serie: str = Form(...),
     estado: str = Form(...),
-    # NO definir los campos técnicos aquí - los obtendremos del form_data
     db: Session = Depends(get_db)
 ):
     if request.session.get("rol") != "Administrador":
         return RedirectResponse("/", status_code=302)
 
     try:
-        # Obtener todos los datos del formulario
+        # Obtener datos del formulario
         form_data = await request.form()
-        
-        # Función helper para convertir strings
+
+        # Helper para enteros opcionales
         def safe_int(value: str) -> Optional[int]:
             if not value or value.strip() == "":
                 return None
@@ -428,11 +441,10 @@ async def crear_equipo(
         # Verificar si es CPU
         tipo_obj = db.query(TipoDispositivo).filter(TipoDispositivo.id_tipo == id_tipo).first()
         if tipo_obj and tipo_obj.nombre.lower() == "cpu":
-            # Solo procesar campos técnicos si es CPU y existen en el form_data
             ram_gb = safe_int(form_data.get("ram_gb", ""))
             almacenamiento_gb = safe_int(form_data.get("almacenamiento_gb", ""))
             vram_gb = safe_int(form_data.get("vram_gb", ""))
-            
+
             detalle_pc = PcDetalle(
                 id_equipo=nuevo_equipo.id_equipo,
                 ram_gb=ram_gb,
@@ -461,7 +473,6 @@ async def crear_equipo(
 
             # Procesar periféricos
             perifericos_data = {}
-            import re
             for key, value in form_data.items():
                 if key.startswith("perifericos["):
                     match = re.match(r"perifericos\[(\d+)\]\[(\w+)\]", key)
@@ -491,11 +502,12 @@ async def crear_equipo(
 
     return RedirectResponse("/equipos", status_code=302)
 
+
+# ---------- ACTUALIZAR DETALLES PC ----------
 @app.post("/equipos/{id_equipo}/detalles/actualizar")
 async def actualizar_detalles_pc(
     request: Request,
     id_equipo: int = Path(...),
-    # NO definir parámetros aquí - obtener todo del form_data
     db: Session = Depends(get_db)
 ):
     if request.session.get("rol") != "Administrador":
@@ -507,10 +519,8 @@ async def actualizar_detalles_pc(
         return RedirectResponse("/equipos", status_code=302)
 
     try:
-        # Obtener todos los datos del formulario
         form_data = await request.form()
-        
-        # Función helper para convertir strings
+
         def safe_int(value: str) -> Optional[int]:
             if not value or value.strip() == "":
                 return None
@@ -519,7 +529,6 @@ async def actualizar_detalles_pc(
             except ValueError:
                 return None
 
-        # Convertir campos
         ram_gb = safe_int(form_data.get("ram_gb", ""))
         almacenamiento_gb = safe_int(form_data.get("almacenamiento_gb", ""))
         vram_gb = safe_int(form_data.get("vram_gb", ""))
@@ -530,7 +539,6 @@ async def actualizar_detalles_pc(
             detalle_pc = PcDetalle(id_equipo=id_equipo)
             db.add(detalle_pc)
 
-        # Actualizar detalles
         detalle_pc.ram_gb = ram_gb
         detalle_pc.tipo_ram = form_data.get("tipo_ram")
         detalle_pc.almacenamiento_gb = almacenamiento_gb
@@ -542,7 +550,7 @@ async def actualizar_detalles_pc(
         grafica_marca = form_data.get("grafica_marca")
         grafica_modelo = form_data.get("grafica_modelo")
         grafica = db.query(GraficaDedicada).filter(GraficaDedicada.id_pc == detalle_pc.id_pc).first()
-        
+
         if grafica_marca or grafica_modelo or vram_gb:
             if not grafica:
                 grafica = GraficaDedicada(id_pc=detalle_pc.id_pc)
@@ -553,11 +561,10 @@ async def actualizar_detalles_pc(
         elif grafica:
             db.delete(grafica)
 
-        # Procesar periféricos
+        # Procesar periféricos (se eliminan y se vuelven a insertar)
         db.query(Periferico).filter(Periferico.id_equipo == id_equipo).delete()
 
         perifericos_data = {}
-        import re
         for key, value in form_data.items():
             if key.startswith("perifericos["):
                 match = re.match(r"perifericos\[(\d+)\]\[(\w+)\]", key)
@@ -580,10 +587,11 @@ async def actualizar_detalles_pc(
 
         db.commit()
         request.session["mensaje"] = "✅ Detalles actualizados correctamente"
-        
+
     except Exception as e:
         db.rollback()
         request.session["error"] = f"❌ Error al actualizar: {str(e)}"
 
     return RedirectResponse("/equipos", status_code=302)
+
 
