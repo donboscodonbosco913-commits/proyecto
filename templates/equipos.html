@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -80,24 +80,24 @@
                     <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3" onsubmit="return prepararFormularioActualizacion(this)">
                         <h6 class="mt-2">Detalles técnicos</h6>
                         <div class="col-md-2">
-                            <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" 
+                            <input type="number" name="ram_gb" class="form-control cpu-field" placeholder="RAM (GB)" 
                                    value="{{ e.ram_gb if e.ram_gb is not none }}">
                         </div>
-                        <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control" placeholder="Tipo RAM" value="{{ e.tipo_ram or '' }}"></div>
+                        <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control cpu-field" placeholder="Tipo RAM" value="{{ e.tipo_ram or '' }}"></div>
                         <div class="col-md-2">
-                            <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)" 
+                            <input type="number" name="almacenamiento_gb" class="form-control cpu-field" placeholder="Almacenamiento (GB)" 
                                    value="{{ e.almacenamiento_gb if e.almacenamiento_gb is not none }}">
                         </div>
-                        <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control" placeholder="Tipo almacenamiento" value="{{ e.tipo_almacenamiento or '' }}"></div>
-                        <div class="col-md-4"><input type="text" name="procesador" class="form-control" placeholder="Procesador" value="{{ e.procesador or '' }}"></div>
-                        <div class="col-md-12"><textarea name="otros_detalles" class="form-control" placeholder="Otros detalles">{{ e.otros_detalles or '' }}</textarea></div>
+                        <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control cpu-field" placeholder="Tipo almacenamiento" value="{{ e.tipo_almacenamiento or '' }}"></div>
+                        <div class="col-md-4"><input type="text" name="procesador" class="form-control cpu-field" placeholder="Procesador" value="{{ e.procesador or '' }}"></div>
+                        <div class="col-md-12"><textarea name="otros_detalles" class="form-control cpu-field" placeholder="Otros detalles">{{ e.otros_detalles or '' }}</textarea></div>
 
                         <hr class="mt-4 mb-2">
                         <h6>Gráfica dedicada</h6>
-                        <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control" placeholder="Marca de gráfica" value="{{ e.grafica_marca or '' }}"></div>
-                        <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control" placeholder="Modelo de gráfica" value="{{ e.grafica_modelo or '' }}"></div>
+                        <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control cpu-field" placeholder="Marca de gráfica" value="{{ e.grafica_marca or '' }}"></div>
+                        <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control cpu-field" placeholder="Modelo de gráfica" value="{{ e.grafica_modelo or '' }}"></div>
                         <div class="col-md-2">
-                            <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)" 
+                            <input type="number" name="vram_gb" class="form-control cpu-field" placeholder="VRAM (GB)" 
                                    value="{{ e.vram_gb if e.vram_gb is not none }}">
                         </div>
 
@@ -107,16 +107,16 @@
                             {% for p in e.perifericos %}
                             <div class="row g-3 mt-2">
                                 <div class="col-md-3">
-                                    <select name="perifericos[{{ loop.index0 }}][tipo]" class="form-select" required>
+                                    <select name="perifericos[{{ loop.index0 }}][tipo]" class="form-select cpu-field" required>
                                         <option value="Monitor" {% if p.tipo=="Monitor" %}selected{% endif %}>Monitor</option>
                                         <option value="Teclado" {% if p.tipo=="Teclado" %}selected{% endif %}>Teclado</option>
                                         <option value="Mouse" {% if p.tipo=="Mouse" %}selected{% endif %}>Mouse</option>
                                         <option value="Bocina" {% if p.tipo=="Bocina" %}selected{% endif %}>Bocina</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][marca]" class="form-control" value="{{ p.marca }}"></div>
-                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][modelo]" class="form-control" value="{{ p.modelo }}"></div>
-                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][serie]" class="form-control" value="{{ p.serie }}"></div>
+                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][marca]" class="form-control cpu-field" value="{{ p.marca }}"></div>
+                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][modelo]" class="form-control cpu-field" value="{{ p.modelo }}"></div>
+                                <div class="col-md-3"><input type="text" name="perifericos[{{ loop.index0 }}][serie]" class="form-control cpu-field" value="{{ p.serie }}"></div>
                             </div>
                             {% endfor %}
                         </div>
@@ -168,22 +168,22 @@
         <div id="camposCPU" class="row g-3 mt-2" style="display: none; flex-wrap: wrap;">
             <h6>Detalles técnicos</h6>
             <div class="col-md-2">
-                <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)">
+                <input type="number" name="ram_gb" class="form-control cpu-field" placeholder="RAM (GB)">
             </div>
-            <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control" placeholder="Tipo RAM"></div>
+            <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control cpu-field" placeholder="Tipo RAM"></div>
             <div class="col-md-2">
-                <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)">
+                <input type="number" name="almacenamiento_gb" class="form-control cpu-field" placeholder="Almacenamiento (GB)">
             </div>
-            <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control" placeholder="Tipo almacenamiento"></div>
-            <div class="col-md-4"><input type="text" name="procesador" class="form-control" placeholder="Procesador"></div>
-            <div class="col-md-12"><textarea name="otros_detalles" class="form-control" placeholder="Otros detalles técnicos"></textarea></div>
+            <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control cpu-field" placeholder="Tipo almacenamiento"></div>
+            <div class="col-md-4"><input type="text" name="procesador" class="form-control cpu-field" placeholder="Procesador"></div>
+            <div class="col-md-12"><textarea name="otros_detalles" class="form-control cpu-field" placeholder="Otros detalles técnicos"></textarea></div>
 
             <hr class="mt-4 mb-2">
             <h6>Gráfica dedicada</h6>
-            <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control" placeholder="Marca de gráfica"></div>
-            <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control" placeholder="Modelo de gráfica"></div>
+            <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control cpu-field" placeholder="Marca de gráfica"></div>
+            <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control cpu-field" placeholder="Modelo de gráfica"></div>
             <div class="col-md-2">
-                <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)">
+                <input type="number" name="vram_gb" class="form-control cpu-field" placeholder="VRAM (GB)">
             </div>
 
             <hr>
@@ -229,7 +229,7 @@ function agregarPeriferico(id_equipo) {
     div.classList.add("row", "g-3", "mt-2");
     div.innerHTML = `
         <div class="col-md-3">
-            <select name="perifericos[${index}][tipo]" class="form-select" required>
+            <select name="perifericos[${index}][tipo]" class="form-select cpu-field" required>
                 <option value="">Seleccione tipo</option>
                 <option value="Monitor">Monitor</option>
                 <option value="Teclado">Teclado</option>
@@ -237,9 +237,9 @@ function agregarPeriferico(id_equipo) {
                 <option value="Bocina">Bocina</option>
             </select>
         </div>
-        <div class="col-md-3"><input type="text" name="perifericos[${index}][marca]" class="form-control" placeholder="Marca"></div>
-        <div class="col-md-3"><input type="text" name="perifericos[${index}][modelo]" class="form-control" placeholder="Modelo"></div>
-        <div class="col-md-3"><input type="text" name="perifericos[${index}][serie]" class="form-control" placeholder="Serie"></div>
+        <div class="col-md-3"><input type="text" name="perifericos[${index}][marca]" class="form-control cpu-field" placeholder="Marca"></div>
+        <div class="col-md-3"><input type="text" name="perifericos[${index}][modelo]" class="form-control cpu-field" placeholder="Modelo"></div>
+        <div class="col-md-3"><input type="text" name="perifericos[${index}][serie]" class="form-control cpu-field" placeholder="Serie"></div>
     `;
     container.appendChild(div);
     contadorPerifericos[id_equipo]++;
@@ -252,36 +252,23 @@ function prepararFormularioNuevo() {
     const esCPU = tipoSelect.options[tipoSelect.selectedIndex].text.toLowerCase() === 'cpu';
     
     if (!esCPU) {
-        // Si NO es CPU, remover completamente los campos técnicos
-        const camposTecnicos = [
-            'ram_gb', 'tipo_ram', 'almacenamiento_gb', 'tipo_almacenamiento',
-            'procesador', 'otros_detalles', 'grafica_marca', 'grafica_modelo', 'vram_gb'
-        ];
-        
-        camposTecnicos.forEach(nombre => {
-            const campo = formulario.querySelector(`[name="${nombre}"]`);
-            if (campo) {
-                campo.remove();
-            }
-        });
-        
-        // Remover periféricos si no es CPU
-        const perifericos = formulario.querySelectorAll('[name^="perifericos"]');
-        perifericos.forEach(periferico => {
-            periferico.remove();
+        // Si NO es CPU, remover completamente TODOS los campos con clase cpu-field
+        const camposCPU = formulario.querySelectorAll('.cpu-field');
+        camposCPU.forEach(campo => {
+            campo.remove();
         });
     }
     
-    return true; // Permitir el envío del formulario
+    return true;
 }
 
-// Función para preparar el formulario de ACTUALIZACIÓN (siempre es CPU aquí)
+// Función para preparar el formulario de ACTUALIZACIÓN
 function prepararFormularioActualizacion(form) {
-    // Para actualización, siempre es CPU, pero limpiamos campos vacíos
+    // Para actualización, siempre es CPU, pero limpiamos campos numéricos vacíos
     const numberInputs = form.querySelectorAll('input[type="number"]');
     numberInputs.forEach(input => {
-        if (input.value === '') {
-            // Para campos vacíos, los convertimos a 0 o los manejamos en el backend
+        if (input.value === '' || input.value === null) {
+            // Asignar 0 temporalmente para evitar error de parsing
             input.value = '0';
         }
     });
