@@ -1,16 +1,3 @@
-from sqlalchemy import Column, Integer, String, Enum, TIMESTAMP, Text, ForeignKey
-from sqlalchemy.orm import relationship
-from database import Base
-import enum
-
-# ------------------ ENUMS ------------------
-class RolEnum(str, enum.Enum):
-    Administrador = "Administrador"
-    Estandar = "Estandar"
-
-class EstadoEnum(str, enum.Enum):
-    Activo = "Activo"
-    Inactivo = "Inactivo"
     Eliminado = "Eliminado"
 
 # ------------------ MODELOS ------------------
@@ -107,4 +94,3 @@ class Periferico(Base):
     serie = Column(String(50))
 
     equipo = relationship("Equipo", back_populates="perifericos")
-
