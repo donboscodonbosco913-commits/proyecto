@@ -77,18 +77,17 @@
             {% if e.tipo_nombre.lower() == "cpu" %}
             <tr id="detalles-{{ e.id_equipo }}" style="display: none;">
                 <td colspan="10">
-                    <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3">
+                    <form method="post" action="/equipos/{{ e.id_equipo }}/detalles/actualizar" class="row g-3" onsubmit="return prepararEnvioFormulario(this)">
+                        <input type="hidden" name="es_cpu" value="true">
                         <h6 class="mt-2">Detalles técnicos</h6>
                         <div class="col-md-2">
                             <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" 
-                                   value="{{ e.ram_gb if e.ram_gb is not none else '' }}"
-                                   onchange="handleNumberInput(this)">
+                                   value="{{ e.ram_gb if e.ram_gb is not none }}">
                         </div>
                         <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control" placeholder="Tipo RAM" value="{{ e.tipo_ram or '' }}"></div>
                         <div class="col-md-2">
                             <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)" 
-                                   value="{{ e.almacenamiento_gb if e.almacenamiento_gb is not none else '' }}"
-                                   onchange="handleNumberInput(this)">
+                                   value="{{ e.almacenamiento_gb if e.almacenamiento_gb is not none }}">
                         </div>
                         <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control" placeholder="Tipo almacenamiento" value="{{ e.tipo_almacenamiento or '' }}"></div>
                         <div class="col-md-4"><input type="text" name="procesador" class="form-control" placeholder="Procesador" value="{{ e.procesador or '' }}"></div>
@@ -100,8 +99,7 @@
                         <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control" placeholder="Modelo de gráfica" value="{{ e.grafica_modelo or '' }}"></div>
                         <div class="col-md-2">
                             <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)" 
-                                   value="{{ e.vram_gb if e.vram_gb is not none else '' }}"
-                                   onchange="handleNumberInput(this)">
+                                   value="{{ e.vram_gb if e.vram_gb is not none }}">
                         </div>
 
                         <hr class="mt-4 mb-2">
@@ -138,7 +136,7 @@
     </table>
 
     <h4 class="mt-5">Registrar nuevo equipo</h4>
-    <form method="post" action="/equipos/nuevo" class="row g-3 mb-4" id="nuevoEquipoForm">
+    <form method="post" action="/equipos/nuevo" class="row g-3 mb-4" id="nuevoEquipoForm" onsubmit="return prepararEnvioFormulario(this)">
         <div class="col-md-3"><input type="text" name="codigo" class="form-control" placeholder="Código del equipo" required></div>
         <div class="col-md-3">
             <select name="id_edificio" class="form-select" required>
@@ -169,15 +167,14 @@
 
         <!-- Campos técnicos CPU -->
         <div id="camposCPU" class="row g-3 mt-2" style="display: none; flex-wrap: wrap;">
+            <input type="hidden" name="es_cpu" value="true">
             <h6>Detalles técnicos</h6>
             <div class="col-md-2">
-                <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)" 
-                       onchange="handleNumberInput(this)">
+                <input type="number" name="ram_gb" class="form-control" placeholder="RAM (GB)">
             </div>
             <div class="col-md-2"><input type="text" name="tipo_ram" class="form-control" placeholder="Tipo RAM"></div>
             <div class="col-md-2">
-                <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)" 
-                       onchange="handleNumberInput(this)">
+                <input type="number" name="almacenamiento_gb" class="form-control" placeholder="Almacenamiento (GB)">
             </div>
             <div class="col-md-2"><input type="text" name="tipo_almacenamiento" class="form-control" placeholder="Tipo almacenamiento"></div>
             <div class="col-md-4"><input type="text" name="procesador" class="form-control" placeholder="Procesador"></div>
@@ -188,8 +185,7 @@
             <div class="col-md-3"><input type="text" name="grafica_marca" class="form-control" placeholder="Marca de gráfica"></div>
             <div class="col-md-5"><input type="text" name="grafica_modelo" class="form-control" placeholder="Modelo de gráfica"></div>
             <div class="col-md-2">
-                <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)" 
-                       onchange="handleNumberInput(this)">
+                <input type="number" name="vram_gb" class="form-control" placeholder="VRAM (GB)">
             </div>
 
             <hr>
@@ -214,6 +210,14 @@ function mostrarDetallesCPU() {
     const camposCPU = document.getElementById("camposCPU");
     const tipoSeleccionado = selectTipo.options[selectTipo.selectedIndex].text.toLowerCase();
     camposCPU.style.display = tipoSeleccionado === "cpu" ? "flex" : "none";
+    
+    // Si no es CPU, remover el campo hidden es_cpu
+    if (tipoSeleccionado !== "cpu") {
+        const hiddenInput = camposCPU.querySelector('input[name="es_cpu"]');
+        if (hiddenInput) {
+            hiddenInput.remove();
+        }
+    }
 }
 
 function toggleDetalles(id) {
@@ -251,38 +255,37 @@ function agregarPeriferico(id_equipo) {
     contadorPerifericos[id_equipo]++;
 }
 
-// Función para manejar campos numéricos vacíos
-function handleNumberInput(input) {
-    if (input.value === '') {
-        // Si el campo está vacío, lo limpiamos completamente
-        input.value = '';
-    }
-}
-
-// Limpiar campos numéricos antes del envío del formulario
-document.getElementById('nuevoEquipoForm')?.addEventListener('submit', function(e) {
-    const numberInputs = this.querySelectorAll('input[type="number"]');
-    numberInputs.forEach(input => {
-        if (input.value === '') {
-            // Remover el atributo name temporalmente para que no se envíe
-            input.setAttribute('data-original-name', input.name);
-            input.removeAttribute('name');
-        }
-    });
-});
-
-// Para formularios de actualización
-document.querySelectorAll('form[action*="/detalles/actualizar"]').forEach(form => {
-    form.addEventListener('submit', function(e) {
-        const numberInputs = this.querySelectorAll('input[type="number"]');
-        numberInputs.forEach(input => {
-            if (input.value === '') {
-                input.setAttribute('data-original-name', input.name);
-                input.removeAttribute('name');
-            }
+// Función para preparar el envío del formulario
+function prepararEnvioFormulario(form) {
+    const esCPU = form.querySelector('input[name="es_cpu"]') !== null;
+    
+    if (!esCPU) {
+        // Si no es CPU, remover todos los campos técnicos
+        const camposTecnicos = form.querySelectorAll(`
+            input[name="ram_gb"],
+            input[name="tipo_ram"], 
+            input[name="almacenamiento_gb"],
+            input[name="tipo_almacenamiento"],
+            input[name="procesador"],
+            textarea[name="otros_detalles"],
+            input[name="grafica_marca"],
+            input[name="grafica_modelo"],
+            input[name="vram_gb"]
+        `);
+        
+        camposTecnicos.forEach(campo => {
+            campo.removeAttribute('name');
         });
-    });
-});
+        
+        // También remover periféricos si no es CPU
+        const perifericos = form.querySelectorAll('select[name^="perifericos"], input[name^="perifericos"]');
+        perifericos.forEach(periferico => {
+            periferico.removeAttribute('name');
+        });
+    }
+    
+    return true;
+}
 </script>
 </body>
 </html>
