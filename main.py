@@ -367,16 +367,16 @@ async def crear_equipo(
     modelo: str = Form(...),
     serie: str = Form(...),
     estado: str = Form(...),
-    # Opcionales para PC
-    ram_gb: Optional[int] = Form(None),
+    # Cambiar a str y convertir manualmente
+    ram_gb: Optional[str] = Form(None),
     tipo_ram: Optional[str] = Form(None),
-    almacenamiento_gb: Optional[int] = Form(None),
+    almacenamiento_gb: Optional[str] = Form(None),
     tipo_almacenamiento: Optional[str] = Form(None),
     procesador: Optional[str] = Form(None),
     otros_detalles: Optional[str] = Form(None),
     grafica_marca: Optional[str] = Form(None),
     grafica_modelo: Optional[str] = Form(None),
-    vram_gb: Optional[int] = Form(None),
+    vram_gb: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     if request.session.get("rol") != "Administrador":
@@ -385,6 +385,20 @@ async def crear_equipo(
     form_data = await request.form()
 
     try:
+        # Función helper para convertir strings vacíos a None
+        def safe_int(value: Optional[str]) -> Optional[int]:
+            if value is None or value.strip() == "":
+                return None
+            try:
+                return int(value)
+            except ValueError:
+                return None
+
+        # Convertir los campos numéricos
+        ram_gb_int = safe_int(ram_gb)
+        almacenamiento_gb_int = safe_int(almacenamiento_gb)
+        vram_gb_int = safe_int(vram_gb)
+
         # Crear el equipo básico
         nuevo_equipo = Equipo(
             codigo=codigo,
@@ -406,9 +420,9 @@ async def crear_equipo(
             # Detalles de PC
             detalle_pc = PcDetalle(
                 id_equipo=nuevo_equipo.id_equipo,
-                ram_gb=ram_gb,
+                ram_gb=ram_gb_int,  # Usar el valor convertido
                 tipo_ram=tipo_ram,
-                almacenamiento_gb=almacenamiento_gb,
+                almacenamiento_gb=almacenamiento_gb_int,  # Usar el valor convertido
                 tipo_almacenamiento=tipo_almacenamiento,
                 procesador=procesador,
                 otros_detalles=otros_detalles
@@ -418,17 +432,17 @@ async def crear_equipo(
             db.refresh(detalle_pc)
 
             # Gráfica dedicada
-            if grafica_marca or grafica_modelo or vram_gb:
+            if grafica_marca or grafica_modelo or vram_gb_int:
                 grafica = GraficaDedicada(
                     id_pc=detalle_pc.id_pc,
                     marca=grafica_marca,
                     modelo=grafica_modelo,
-                    vram_gb=vram_gb
+                    vram_gb=vram_gb_int  # Usar el valor convertido
                 )
                 db.add(grafica)
                 db.commit()
 
-            # Periféricos
+            # Periféricos (tu código existente)
             perifericos_data = {}
             import re
             for key, value in form_data.items():
@@ -571,4 +585,5 @@ def ver_equipo_detalle(request: Request, id_equipo: int, db: Session = Depends(g
         "equipo": equipo,
         "perifericos": perifericos
     })
+
 
