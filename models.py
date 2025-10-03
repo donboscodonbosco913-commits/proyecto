@@ -1,6 +1,21 @@
+from sqlalchemy import Column, Integer, String, Text, Enum, TIMESTAMP, ForeignKey
+from sqlalchemy.orm import relationship
+from database import Base
+import enum
+
+# ------------------ ENUMS ------------------
+
+class RolEnum(enum.Enum):
+    Administrador = "Administrador"
+    Usuario = "Usuario"
+
+class EstadoEnum(enum.Enum):
+    Activo = "Activo"
+    Inactivo = "Inactivo"
     Eliminado = "Eliminado"
 
 # ------------------ MODELOS ------------------
+
 class Usuario(Base):
     __tablename__ = "usuarios"
 
@@ -11,17 +26,20 @@ class Usuario(Base):
     rol = Column(Enum(RolEnum, name="rol_enum"), nullable=False)  # ✅ Enum con nombre
     fecha_creacion = Column(TIMESTAMP)
 
+
 class Edificios(Base):
     __tablename__ = "edificios"
 
     id_edificio = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(50), nullable=False, unique=True)
 
+
 class TipoDispositivo(Base):
     __tablename__ = "tipos_dispositivos"
 
     id_tipo = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(50), nullable=False, unique=True)
+
 
 class Equipo(Base):
     __tablename__ = "equipos"
@@ -42,6 +60,7 @@ class Equipo(Base):
     perifericos = relationship("Periferico", back_populates="equipo", cascade="all, delete-orphan")
     historiales = relationship("HistorialEliminados", back_populates="equipo", cascade="all, delete-orphan")
 
+
 class PcDetalle(Base):
     __tablename__ = "pc_detalles"
 
@@ -57,6 +76,7 @@ class PcDetalle(Base):
     equipo = relationship("Equipo", back_populates="detalle")
     grafica = relationship("GraficaDedicada", uselist=False, back_populates="pc")
 
+
 class GraficaDedicada(Base):
     __tablename__ = "graficas_dedicadas"
 
@@ -67,6 +87,7 @@ class GraficaDedicada(Base):
     vram_gb = Column(Integer)
 
     pc = relationship("PcDetalle", back_populates="grafica")
+
 
 class HistorialEliminados(Base):
     __tablename__ = "historial_eliminados"
@@ -82,6 +103,7 @@ class HistorialEliminados(Base):
     estado = Column(Enum(EstadoEnum, name="estado_enum_historial"), default=EstadoEnum.Eliminado)
 
     equipo = relationship("Equipo", back_populates="historiales")
+
 
 class Periferico(Base):
     __tablename__ = "perifericos"
