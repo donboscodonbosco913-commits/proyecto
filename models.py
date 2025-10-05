@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, String, Text, Enum, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from database import Base
 import enum
 
 # ------------------ ENUMS ------------------
-
 class RolEnum(enum.Enum):
     Administrador = "Administrador"
-    Usuario = "Usuario"
+    Estandar = "Estandar"   # ✅ Cambiado de "Usuario" a "Estandar" para coincidir con main.py
 
 class EstadoEnum(enum.Enum):
     Activo = "Activo"
@@ -23,8 +23,8 @@ class Usuario(Base):
     nombre = Column(String(100), nullable=False)
     usuario = Column(String(50), unique=True, nullable=False)
     clave = Column(String(255), nullable=False)
-    rol = Column(Enum(RolEnum, name="rol_enum"), nullable=False)  # ✅ Enum con nombre
-    fecha_creacion = Column(TIMESTAMP)
+    rol = Column(Enum(RolEnum, name="rol_enum"), nullable=False)
+    fecha_creacion = Column(TIMESTAMP, server_default=func.now())  # ✅ ahora se autocompleta en Postgres
 
 
 class Edificios(Base):
@@ -51,8 +51,8 @@ class Equipo(Base):
     marca = Column(String(50))
     modelo = Column(String(50))
     serie = Column(String(100))
-    estado = Column(Enum(EstadoEnum, name="estado_enum"), default=EstadoEnum.Activo)
-    fecha_registro = Column(TIMESTAMP)
+    estado = Column(Enum(EstadoEnum, name="estado_enum"), default=EstadoEnum.Activo, nullable=False)
+    fecha_registro = Column(TIMESTAMP, server_default=func.now())  # ✅ autocompleta en Postgres
 
     edificio = relationship("Edificios")
     tipo = relationship("TipoDispositivo")
@@ -100,7 +100,7 @@ class HistorialEliminados(Base):
     marca = Column(String(50))
     modelo = Column(String(50))
     serie = Column(String(50))
-    estado = Column(Enum(EstadoEnum, name="estado_enum_historial"), default=EstadoEnum.Eliminado)
+    estado = Column(Enum(EstadoEnum, name="estado_enum"), default=EstadoEnum.Eliminado, nullable=False)
 
     equipo = relationship("Equipo", back_populates="historiales")
 
